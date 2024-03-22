@@ -12,6 +12,7 @@ HCPCA9685 HCPCA9685(I2CAdd);
 
 void setup() 
 {
+  Serial.begin(9600);
   /* Initialise the library and set it to 'servo mode' */ 
   HCPCA9685.Init(SERVO_MODE);
 
@@ -32,17 +33,18 @@ int mapAngles(float angle) {
 
 
 // Function to open the gripper.
-void openArm() {
+void closeArm() {
   HCPCA9685.Servo(0, mapAngles(30));
 }
 
 
 // Function to close the gripper.
-void closeArm() {
+void openArm() {
   HCPCA9685.Servo(0, mapAngles(120));
 }
 
 void moveElbow(float angle) {
+  Serial.println(angle);
   if (angle >= 135.0) {
     angle = 135.0;
   }
@@ -53,6 +55,7 @@ void moveElbow(float angle) {
 }
 
 void moveShoulder(float angle) {
+  Serial.println(angle);
   if (angle >= 120.0) {
     angle = 120.0;
   }
@@ -63,6 +66,7 @@ void moveShoulder(float angle) {
 }
 
 void moveChest(float angle) {
+  Serial.println(angle);
   if (angle >= 180.0) {
     angle = 180.0;
   }
@@ -72,17 +76,78 @@ void moveChest(float angle) {
   HCPCA9685.Servo(3, mapAngles(angle));
 }
 
+char t;
+int c=90,s=60,e=90;
+
+int precision = 5;
+
 void loop() 
 {
-  openArm();
-  moveElbow(90);
-  moveShoulder(45);
-  moveChest(0);
-  delay(1000);
+  if(Serial.available()){
+    t = Serial.read();
+    Serial.println(t);
+  }
 
-  closeArm();
-  moveElbow(90);
-  moveShoulder(120);
-  moveChest(0);
-  delay(1000);
+
+  switch(t) {
+    case 'O':
+      Serial.print("Open\n");
+      openArm();
+      break;
+    case 'C':
+      Serial.print("Close\n");
+      closeArm();
+      break;
+    //COUNTER CLOCKWISE
+    case 'W':
+      if (c < 180 && c > 0) {
+          c += precision;
+          moveChest(c);
+      }
+      break;
+    //CLOCKWISE
+    case 'S':
+      if (c < 180 && c > 0) {
+          c -= precision;
+          moveChest(c);
+      } 
+      break;
+    //
+    case 'A':
+      if (s < 120 && s > 0) {
+          s += precision;
+          moveShoulder(s);
+      }
+      break;
+    //MOVE THE WHOLE PART BACKWORDS
+    case 'D':
+      if (s < 120 && s > 0) {
+          s -= precision;
+          moveShoulder(s);
+      } 
+      break;
+    //MOVE UP
+    case 'K':
+      if (e < 135 && e > 45) {
+          e += precision;
+          moveElbow(e);
+      }
+      break;
+    //MOVE DOWN
+    case 'L':
+      if (e < 135 && e > 45) {
+          e -= precision;
+          moveElbow(e);
+      } 
+      break;
+  }  
+  // moveElbow(90);
+  // moveShoulder(45);
+  // moveChest(0);
+  // delay(1000);
+
+  // moveElbow(90);
+  // moveShoulder(120);
+  // moveChest(0);
+  // delay(1000);
 }
